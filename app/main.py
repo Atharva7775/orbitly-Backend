@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app import __version__
-from app.api import auth
+from app.api import auth, products
 from app.config import get_settings
 from app.db import engine
 
@@ -26,6 +26,7 @@ app.add_middleware(
 # Every router is mounted at /api/<name>; the frontend relies on these exact prefixes.
 for name, module in {
     "auth": auth,
+    "products": products,
 }.items():
     app.include_router(module.router, prefix=f"/api/{name}", tags=[name])
 
