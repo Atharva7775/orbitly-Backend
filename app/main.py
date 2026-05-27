@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app import __version__
-from app.api import auth, products
+from app.api import auth, cart, products
 from app.config import get_settings
 from app.db import engine
 
@@ -27,6 +27,7 @@ app.add_middleware(
 for name, module in {
     "auth": auth,
     "products": products,
+    "cart": cart,
 }.items():
     app.include_router(module.router, prefix=f"/api/{name}", tags=[name])
 
