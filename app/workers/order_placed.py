@@ -24,9 +24,10 @@ def handle(payload: dict) -> None:
             log.warning("order %s not found; skipping", order_id)
             return
         for item in payload["items"]:
+            # Guarded decrement keeps stock non-negative even if two orders race.
             db.execute(
                 update(Product)
-                .where(Product.id == uuid.UUID(item["product_id"]))
+                .where(Product.id == uuid.UUID(item["product_id"]), Product.stock >= item["quantity"])
                 .values(stock=Product.stock - item["quantity"])
             )
         user = db.get(User, order.user_id)
