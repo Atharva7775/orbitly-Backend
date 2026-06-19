@@ -14,6 +14,7 @@ engine = create_engine(
     get_settings().database_url,
     pool_size=10,
     max_overflow=5,
+    pool_pre_ping=True,  # RDS failovers leave dead connections in the pool otherwise
 )
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
