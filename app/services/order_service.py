@@ -32,6 +32,13 @@ def to_out(order: Order) -> OrderOut:
 
 
 def place_order(db: Session, user_id: uuid.UUID, body: OrderIn, idempotency_key: str | None) -> Order:
+    if idempotency_key:
+        existing = db.scalar(select(Order).where(Order.idempotency_key == idempotency_key))
+        if existing is not None:
+            if existing.user_id != user_id:
+                raise HTTPException(status.HTTP_409_CONFLICT, "Idempotency key already used")
+            return existing
+
     cart = db.scalars(select(CartItem).where(CartItem.user_id == user_id).with_for_update()).unique().all()
     if not cart:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Your cart is empty")
