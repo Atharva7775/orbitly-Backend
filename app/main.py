@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app import __version__
-from app.api import auth, cart, orders, payments, products
+from app.api import auth, cart, orders, payments, products, users
 from app.config import get_settings
 from app.db import engine
 
@@ -30,6 +30,7 @@ for name, module in {
     "cart": cart,
     "orders": orders,
     "payments": payments,
+    "users": users,
 }.items():
     app.include_router(module.router, prefix=f"/api/{name}", tags=[name])
 
