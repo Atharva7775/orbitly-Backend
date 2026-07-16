@@ -1,46 +1,37 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Response, status
+from fastapi import APIRouter, Depends, Header, Response, status
+from fastapi.security import HTTPAuthorizationCredentials
 
 from app import schemas
-from app.config import get_settings
-from app.deps import DbSession
-from app.security import SESSION_COOKIE
+from app.deps import DbSession, bearer
 from app.services import auth_service
 
 router = APIRouter()
 
 
-def _set_cookie(response: Response, session) -> None:
-    response.set_cookie(
-        SESSION_COOKIE,
-        session.id,
-        expires=session.expires_at,
-        httponly=True,
-        secure=get_settings().environment != "development",
-        samesite="lax",
-        path="/",
+def _token_out(token: str, session) -> schemas.TokenOut:
+    return schemas.TokenOut(
+        access_token=token,
+        expires_at=session.expires_at,
+        user=schemas.UserOut.model_validate(session.user),
     )
 
 
-@router.post("/signup", response_model=schemas.SessionOut, status_code=status.HTTP_201_CREATED)
-def signup(body: schemas.SignupIn, response: Response, db: DbSession):
-    session = auth_service.signup(db, body.email, body.password, body.full_name)
-    _set_cookie(response, session)
-    return schemas.SessionOut(user=schemas.UserOut.model_validate(session.user))
+@router.post("/signup", response_model=schemas.TokenOut, status_code=status.HTTP_201_CREATED)
+def signup(body: schemas.SignupIn, db: DbSession, user_agent: Annotated[str | None, Header()] = None):
+    token, session = auth_service.signup(db, body.email, body.password, body.full_name, user_agent)
+    return _token_out(token, session)
 
 
-@router.post("/login", response_model=schemas.SessionOut)
-def login(body: schemas.LoginIn, response: Response, db: DbSession):
-    session = auth_service.login(db, body.email, body.password)
-    _set_cookie(response, session)
-    return schemas.SessionOut(user=schemas.UserOut.model_validate(session.user))
+@router.post("/login", response_model=schemas.TokenOut)
+def login(body: schemas.LoginIn, db: DbSession, user_agent: Annotated[str | None, Header()] = None):
+    token, session = auth_service.login(db, body.email, body.password, user_agent)
+    return _token_out(token, session)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout(db: DbSession, session_id: Annotated[str | None, Cookie(alias=SESSION_COOKIE)] = None):
-    if session_id:
-        auth_service.logout(db, session_id)
-    response = Response(status_code=status.HTTP_204_NO_CONTENT)
-    response.delete_cookie(SESSION_COOKIE, path="/")
-    return response
+def logout(db: DbSession, credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]):
+    if credentials is not None:
+        auth_service.logout(db, credentials.credentials)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

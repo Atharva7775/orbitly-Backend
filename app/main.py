@@ -18,9 +18,8 @@ app = FastAPI(title="Orbitly API", version=__version__, docs_url="/api/docs", op
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
-    allow_credentials=True,  # session cookie is sent cross-origin from the storefront
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
-    allow_headers=["Content-Type", "Idempotency-Key"],
+    allow_headers=["Authorization", "Content-Type", "Idempotency-Key"],
 )
 
 # Every router is mounted at /api/<name>; the frontend relies on these exact prefixes.
