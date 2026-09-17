@@ -5,9 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app import __version__
-from app.api import auth, cart, orders, payments, products, users
 from app.config import get_settings
 from app.db import engine
+from app.routers import auth, cart, orders, payments, products, users
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
