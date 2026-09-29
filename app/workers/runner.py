@@ -24,6 +24,7 @@ HANDLERS: dict[str, tuple[str, Callable[[dict], None]]] = {
     user_signed_up.TOPIC: (user_signed_up.GROUP, user_signed_up.handle),
 }
 
+CLAIM_IDLE_MS = 60_000
 _running = True
 
 
@@ -62,6 +63,11 @@ def main() -> None:
     log.info("worker %s consuming %s", consumer, ", ".join(HANDLERS))
 
     while _running:
+        for topic, (group, _) in HANDLERS.items():
+            # Reclaim messages a crashed consumer left behind.
+            _, claimed, _ = client.xautoclaim(topic, group, consumer, min_idle_time=CLAIM_IDLE_MS, count=10)
+            for msg_id, fields in claimed:
+                _dispatch(client, topic, msg_id, fields)
 
         for topic, (group, _) in HANDLERS.items():
             # Short block per stream so SIGTERM is honoured within a few seconds.
