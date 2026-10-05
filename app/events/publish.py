@@ -20,6 +20,9 @@ from app.events.topics import ALL_TOPICS
 
 log = logging.getLogger("orbitly.events")
 
+# Keep roughly a week of events at current volume.
+STREAM_MAXLEN = 200_000
+
 
 @lru_cache(maxsize=1)
 def _client() -> redis.Redis:
@@ -36,7 +39,7 @@ def publish(topic: str, payload: dict[str, Any]) -> str | None:
         "payload": json.dumps(payload, separators=(",", ":")),
     }
     try:
-        return _client().xadd(topic, envelope)
+        return _client().xadd(topic, envelope, maxlen=STREAM_MAXLEN, approximate=True)
     except redis.RedisError:
         log.exception("failed to publish %s event %s", topic, envelope["id"])
         return None

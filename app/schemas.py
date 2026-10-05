@@ -42,7 +42,10 @@ class SignupIn(LoginIn):
     password: str = Field(min_length=10, max_length=200)
 
 
-class SessionOut(ApiModel):
+class TokenOut(ApiModel):
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"
+    expires_at: datetime
     user: UserOut
 
 

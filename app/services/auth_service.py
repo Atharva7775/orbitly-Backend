@@ -18,7 +18,7 @@ def _dummy_hash() -> str:
     return hash_password("orbitly-timing-guard")
 
 
-def signup(db: Session, email: str, password: str, full_name: str) -> UserSession:
+def signup(db: Session, email: str, password: str, full_name: str, user_agent: str | None) -> tuple[str, UserSession]:
     user = User(email=email.lower(), password_hash=hash_password(password), full_name=full_name.strip())
     db.add(user)
     try:
@@ -26,24 +26,24 @@ def signup(db: Session, email: str, password: str, full_name: str) -> UserSessio
     except IntegrityError:
         db.rollback()
         raise HTTPException(status.HTTP_409_CONFLICT, "An account with this email already exists") from None
-    session = issue_session(db, user)
+    token, session = issue_session(db, user, user_agent)
     db.commit()
     publish(USER_SIGNED_UP, {"user_id": str(user.id), "email": user.email, "full_name": user.full_name})
-    return session
+    return token, session
 
 
-def login(db: Session, email: str, password: str) -> UserSession:
+def login(db: Session, email: str, password: str, user_agent: str | None) -> tuple[str, UserSession]:
     user = db.scalar(select(User).where(func.lower(User.email) == email.lower()))
     if user is None:
         verify_password(password, _dummy_hash())
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect email or password")
     if not verify_password(password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect email or password")
-    session = issue_session(db, user)
+    token, session = issue_session(db, user, user_agent)
     db.commit()
-    return session
+    return token, session
 
 
-def logout(db: Session, session_id: str) -> None:
-    revoke_session(db, session_id)
+def logout(db: Session, token: str) -> None:
+    revoke_session(db, token)
     db.commit()

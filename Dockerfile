@@ -11,9 +11,11 @@ COPY requirements.txt .
 RUN pip install --prefix=/install -r requirements.txt
 
 FROM base AS runtime
+RUN groupadd --system orbitly && useradd --system --gid orbitly --home /srv orbitly
 COPY --from=deps /install /usr/local
 COPY app ./app
 COPY migrations ./migrations
+USER orbitly
 EXPOSE 8000
 # The same image runs the API (default) and the event workers:
 #   docker run ... python -m app.workers.runner
