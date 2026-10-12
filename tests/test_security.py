@@ -1,4 +1,6 @@
-from app.security import hash_password, hash_token, verify_password
+from datetime import UTC, datetime, timedelta
+
+from app.security import hash_password, hash_token, session_expiry, verify_password
 
 
 def test_password_roundtrip():
@@ -15,3 +17,9 @@ def test_token_hash_is_sha256_hex():
     digest = hash_token("abc")
     assert len(digest) == 64
     assert digest == hash_token("abc")
+
+
+def test_session_expiry_uses_minutes():
+    now = datetime(2026, 10, 12, 12, 0, tzinfo=UTC)
+    # Default SESSION_TTL_MINUTES is 720 (12 hours).
+    assert session_expiry(now) - now == timedelta(minutes=720)
