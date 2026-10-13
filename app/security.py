@@ -36,7 +36,7 @@ def hash_token(token: str) -> str:
 
 def session_expiry(now: datetime | None = None) -> datetime:
     now = now or datetime.now(UTC)
-    return now + timedelta(seconds=get_settings().session_ttl_minutes)
+    return now + timedelta(minutes=get_settings().session_ttl_minutes)
 
 
 def issue_session(db: Session, user: User, user_agent: str | None) -> tuple[str, UserSession]:
