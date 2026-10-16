@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     environment: str = Field(default="development", alias="ORBITLY_ENV")
+    # "eu" pins storage and email to EU-hosted infrastructure (GDPR data residency).
+    data_region: str = Field(default="us", alias="DATA_REGION")
     database_url: str = Field(alias="DATABASE_URL")
     redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
 
