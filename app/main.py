@@ -34,9 +34,17 @@ for name, module in {
     app.include_router(module.router, prefix=f"/api/{name}", tags=[name])
 
 
+@app.middleware("http")
+async def region_header(request, call_next):
+    # Lets support and the CDN verify which regional stack served a request.
+    response = await call_next(request)
+    response.headers["X-Orbitly-Region"] = settings.data_region
+    return response
+
+
 @app.get("/healthz", include_in_schema=False)
 def healthz() -> dict[str, str]:
-    return {"status": "ok", "version": __version__}
+    return {"status": "ok", "version": __version__, "region": settings.data_region}
 
 
 @app.get("/readyz", include_in_schema=False)
