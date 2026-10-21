@@ -116,6 +116,10 @@ class OrderOut(ApiModel):
     created_at: datetime
 
 
+class CancelIn(ApiModel):
+    reason: Literal["customer_request", "duplicate", "fraud_suspected"] = "customer_request"
+
+
 class PaymentIn(ApiModel):
     order_id: uuid.UUID
     card_token: str = Field(min_length=4, max_length=100)

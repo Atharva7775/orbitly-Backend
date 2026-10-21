@@ -13,6 +13,7 @@ EXPECTED = {
     ("POST", "/api/orders"),
     ("GET", "/api/orders"),
     ("GET", "/api/orders/{order_id}"),
+    ("POST", "/api/orders/{order_id}/cancel"),
     ("POST", "/api/payments"),
     ("GET", "/api/users/me"),
     ("PATCH", "/api/users/me"),
