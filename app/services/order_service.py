@@ -1,12 +1,13 @@
 import uuid
+from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.events.publish import publish
 from app.events.topics import ORDER_PLACED
-from app.models import CartItem, Order, OrderItem
+from app.models import CartItem, Order, OrderItem, Product
 from app.schemas import OrderIn, OrderLineOut, OrderOut
 from app.services import cart_service
 from app.services.pricing import Line, compute_totals, find_promo
@@ -100,4 +101,23 @@ def get_order(db: Session, user_id: uuid.UUID, order_id: uuid.UUID) -> Order:
     # 404 rather than 403 so order ids cannot be probed.
     if order is None or order.user_id != user_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Order not found")
+    return order
+
+
+CANCELLABLE = {"pending", "paid"}
+
+
+def cancel_order(db: Session, user_id: uuid.UUID, order_id: uuid.UUID, reason: str) -> Order:
+    order = db.get(Order, order_id, with_for_update=True)
+    if order is None or order.user_id != user_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Order not found")
+    if order.status not in CANCELLABLE:
+        raise HTTPException(status.HTTP_409_CONFLICT, f"Order is already {order.status}")
+    # Paid orders are refunded by the finance job that watches cancelled_at.
+    order.status = "cancelled"
+    order.cancelled_at = datetime.now(UTC)
+    order.cancel_reason = reason
+    for item in order.items:
+        db.execute(update(Product).where(Product.id == item.product_id).values(stock=Product.stock + item.quantity))
+    db.commit()
     return order

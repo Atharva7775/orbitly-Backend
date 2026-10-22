@@ -37,3 +37,8 @@ def list_orders(
 @router.get("/{order_id}", response_model=schemas.OrderOut)
 def get_order(order_id: uuid.UUID, user: CurrentUser, db: DbSession):
     return order_service.to_out(order_service.get_order(db, user.id, order_id))
+
+
+@router.post("/{order_id}/cancel", response_model=schemas.OrderOut)
+def cancel_order(order_id: uuid.UUID, body: schemas.CancelIn, user: CurrentUser, db: DbSession):
+    return order_service.to_out(order_service.cancel_order(db, user.id, order_id, body.reason))
