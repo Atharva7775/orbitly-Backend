@@ -110,3 +110,13 @@ class UserSession(Base):
     meta: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
 
     user: Mapped[User] = relationship(lazy="joined")
+
+
+class WishlistItem(Base):
+    __tablename__ = "wishlist_items"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), primary_key=True)
+    added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    product: Mapped[Product] = relationship(lazy="joined")
