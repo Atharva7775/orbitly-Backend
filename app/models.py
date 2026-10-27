@@ -65,6 +65,8 @@ class Order(Base):
     shipping_address: Mapped[dict] = mapped_column(JSONB)
     idempotency_key: Mapped[str | None] = mapped_column(String(64), unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancel_reason: Mapped[str | None] = mapped_column(String(50))
 
     items: Mapped[list["OrderItem"]] = relationship(lazy="selectin", cascade="all, delete-orphan")
 
