@@ -7,7 +7,7 @@ from sqlalchemy import text
 from app import __version__
 from app.config import get_settings
 from app.db import engine
-from app.routers import auth, cart, orders, payments, products, users
+from app.routers import auth, cart, orders, payments, products, users, wishlist
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
@@ -30,6 +30,7 @@ for name, module in {
     "orders": orders,
     "payments": payments,
     "users": users,
+    "wishlist": wishlist,
 }.items():
     app.include_router(module.router, prefix=f"/api/{name}", tags=[name])
 

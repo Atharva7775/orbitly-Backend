@@ -60,6 +60,10 @@ class ProductOut(ApiModel):
     stock: int
 
 
+class WishlistOut(ApiModel):
+    items: list[ProductOut]
+
+
 class CartItemIn(ApiModel):
     product_id: uuid.UUID
     quantity: int = Field(ge=1, le=20)
