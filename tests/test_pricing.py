@@ -33,3 +33,9 @@ def test_amount_off_never_exceeds_subtotal():
 def test_unknown_promo():
     assert find_promo("NOPE") is None
     assert find_promo(None) is None
+
+
+def test_percent_discount_rounds_once_on_subtotal():
+    # Three lines of 5 cents at 10 %: per-line rounding gave 3, the correct value is 2 (1.5 -> 2).
+    lines = [Line(5, 1), Line(5, 1), Line(5, 1)]
+    assert compute_totals(lines, find_promo("ORBIT10"), "US").discount_cents == 2

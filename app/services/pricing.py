@@ -56,8 +56,9 @@ def compute_totals(lines: list[Line], promo: Promo | None, country: str) -> Tota
     discount = 0
     if promo and subtotal >= promo.min_subtotal_cents:
         if promo.percent_bps:
-            # Per-line so receipts can show the discount next to each item.
-            discount = sum(apply_bps(line.total, promo.percent_bps) for line in lines)
+            # Round once on the subtotal: per-line rounding drifted up to 1 cent
+            # per line and disagreed with the payment gateway's total.
+            discount = apply_bps(subtotal, promo.percent_bps)
         elif promo.amount_off_cents:
             discount = min(promo.amount_off_cents, subtotal)
 
